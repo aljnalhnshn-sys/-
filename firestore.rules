@@ -1,0 +1,138 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidUser(data) {
+      return data.uid is string && data.uid == request.auth.uid &&
+             data.username is string && data.username.size() >= 3 && data.username.size() <= 20 &&
+             data.username.matches('^[a-z0-9_]{3,20}$') &&
+             data.usernameLowercase is string && data.usernameLowercase == data.username &&
+             data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 50 &&
+             (!('photoUrl' in data) || data.photoUrl == null || (data.photoUrl is string && data.photoUrl.size() <= 2000)) &&
+             (!('bio' in data) || data.bio == null || (data.bio is string && data.bio.size() <= 200)) &&
+             (!('fcmToken' in data) || data.fcmToken == null || (data.fcmToken is string && data.fcmToken.size() <= 500));
+    }
+
+    function isValidUsername(data, username) {
+      return data.uid is string && data.uid == request.auth.uid &&
+             username is string && username.size() >= 3 && username.size() <= 20 &&
+             username.matches('^[a-z0-9_]{3,20}$');
+    }
+
+    function isValidConversation(data) {
+      return data.conversationId is string && data.conversationId.size() <= 128 &&
+             data.participantIds is list && data.participantIds.size() == 2 &&
+             request.auth.uid in data.participantIds &&
+             (!('lastMessage' in data) || data.lastMessage == null || (data.lastMessage is string && data.lastMessage.size() <= 2000)) &&
+             (!('lastMessageSenderId' in data) || data.lastMessageSenderId == null || (data.lastMessageSenderId is string && data.lastMessageSenderId in data.participantIds)) &&
+             (!('lastMessageSenderName' in data) || data.lastMessageSenderName == null || (data.lastMessageSenderName is string && data.lastMessageSenderName.size() <= 100));
+    }
+
+    function isValidMessage(data, conversationId) {
+      return data.messageId is string && data.messageId.size() <= 128 &&
+             data.conversationId is string && data.conversationId == conversationId &&
+             data.senderId is string && data.senderId == request.auth.uid &&
+             data.participantIds is list && data.participantIds.size() == 2 &&
+             request.auth.uid in data.participantIds &&
+             data.senderName is string && data.senderName.size() >= 1 && data.senderName.size() <= 100 &&
+             data.text is string && data.text.size() >= 1 && data.text.size() <= 2000 &&
+             (!('type' in data) || data.type in ['text', 'image']) &&
+             (!('imageUrl' in data) || data.imageUrl == null || (data.imageUrl is string && data.imageUrl.size() <= 2000)) &&
+             (!('status' in data) || data.status in ['sending', 'sent', 'delivered', 'read']) &&
+             (!('readBy' in data) || (data.readBy is list && data.readBy.size() <= 5));
+    }
+
+    // USERS COLLECTION
+    match /users/{userId} {
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn() && request.auth.uid == userId &&
+                       incoming().uid == userId &&
+                       incoming().createdAt is timestamp &&
+                       incoming().createdAt <= request.time &&
+                       isValidUser(incoming());
+      allow update: if isSignedIn() && request.auth.uid == userId &&
+                       incoming().uid == existing().uid &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().updatedAt is timestamp &&
+                       incoming().updatedAt <= request.time &&
+                       isValidUser(incoming()) &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoUrl', 'bio', 'fcmToken', 'updatedAt']);
+      allow delete: if isSignedIn() && request.auth.uid == userId;
+
+      match /blocked/{blockedUid} {
+        allow read, write: if isSignedIn() && request.auth.uid == userId;
+      }
+    }
+
+    // USERNAMES COLLECTION (Unique username claims)
+    match /usernames/{username} {
+      allow get: if isSignedIn();
+      allow create: if isSignedIn() &&
+                       isValidUsername(incoming(), username) &&
+                       incoming().createdAt is timestamp &&
+                       incoming().createdAt <= request.time;
+      allow update: if false;
+      allow delete: if isSignedIn() && existing().uid == request.auth.uid;
+    }
+
+    // CONVERSATIONS COLLECTION
+    match /conversations/{conversationId} {
+      allow get, list: if isSignedIn() && request.auth.uid in resource.data.participantIds;
+      allow create: if isSignedIn() &&
+                       isValidId(conversationId) &&
+                       request.auth.uid in incoming().participantIds &&
+                       incoming().createdAt is timestamp &&
+                       incoming().createdAt <= request.time &&
+                       isValidConversation(incoming());
+      allow update: if isSignedIn() &&
+                       request.auth.uid in existing().participantIds &&
+                       incoming().participantIds == existing().participantIds &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().updatedAt is timestamp &&
+                       incoming().updatedAt <= request.time &&
+                       isValidConversation(incoming()) &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['lastMessage', 'lastMessageSenderId', 'lastMessageSenderName', 'lastMessageAt', 'unreadCount', 'updatedAt', 'participantData']);
+      allow delete: if isSignedIn() && request.auth.uid in resource.data.participantIds;
+
+      // MESSAGES SUBCOLLECTION
+      match /messages/{messageId} {
+        allow get, list: if isSignedIn() && request.auth.uid in resource.data.participantIds;
+        allow create: if isSignedIn() &&
+                         isValidId(messageId) &&
+                         request.auth.uid == incoming().senderId &&
+                         request.auth.uid in incoming().participantIds &&
+                         incoming().createdAt is timestamp &&
+                         incoming().createdAt <= request.time &&
+                         isValidMessage(incoming(), conversationId);
+        allow update: if isSignedIn() &&
+                         request.auth.uid in existing().participantIds &&
+                         incoming().senderId == existing().senderId &&
+                         incoming().participantIds == existing().participantIds &&
+                         incoming().createdAt == existing().createdAt &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['status', 'readBy']);
+        allow delete: if isSignedIn() && request.auth.uid == existing().senderId;
+      }
+    }
+  }
+}

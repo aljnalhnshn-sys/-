@@ -1,0 +1,99 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile containing public identifier, display name, and bio",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "The Firebase Authentication UID" },
+        "username": { "type": "string", "description": "Unique chosen username (3-20 chars, lowercase, numbers, underscores)" },
+        "usernameLowercase": { "type": "string", "description": "Normalized lowercase username for fast indexing" },
+        "displayName": { "type": "string", "description": "Display name of the user" },
+        "photoUrl": { "type": "string", "description": "Profile picture URL" },
+        "bio": { "type": "string", "description": "Short user bio or status" },
+        "fcmToken": { "type": "string", "description": "Optional FCM push token" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp via serverTimestamp" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Last update timestamp via serverTimestamp" }
+      },
+      "required": ["uid", "username", "usernameLowercase", "displayName", "createdAt"]
+    },
+    "Username": {
+      "title": "Username",
+      "description": "Unique username claim mapping lowercase username to user UID",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "UID that owns this username" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Reservation timestamp" }
+      },
+      "required": ["uid", "createdAt"]
+    },
+    "Conversation": {
+      "title": "Conversation",
+      "description": "Direct conversation between two users with deterministic ID",
+      "type": "object",
+      "properties": {
+        "conversationId": { "type": "string", "description": "Deterministic ID formatted as conv_{uid1}_{uid2}" },
+        "participantIds": { "type": "array", "description": "List of the two user UIDs" },
+        "participantData": { "type": "object", "description": "Denormalized map of user profile snippets" },
+        "lastMessage": { "type": "string", "description": "Snippet of the last sent message" },
+        "lastMessageSenderId": { "type": "string", "description": "UID of the last message sender" },
+        "lastMessageSenderName": { "type": "string", "description": "Display name of the last message sender" },
+        "lastMessageAt": { "type": "string", "format": "date-time", "description": "Timestamp of the last message" },
+        "unreadCount": { "type": "object", "description": "Map of UID to unread messages count" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Conversation creation timestamp" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Conversation last update timestamp" }
+      },
+      "required": ["conversationId", "participantIds", "createdAt"]
+    },
+    "Message": {
+      "title": "Message",
+      "description": "Chat message sent inside a conversation",
+      "type": "object",
+      "properties": {
+        "messageId": { "type": "string", "description": "Unique message ID" },
+        "conversationId": { "type": "string", "description": "Parent conversation ID" },
+        "senderId": { "type": "string", "description": "UID of the sender" },
+        "senderName": { "type": "string", "description": "Display name of the sender" },
+        "text": { "type": "string", "description": "Message text payload" },
+        "type": { "type": "string", "description": "Message type (text, image, etc.)" },
+        "imageUrl": { "type": "string", "description": "Optional media attachment URL" },
+        "status": { "type": "string", "description": "Delivery status: sending, sent, delivered, read" },
+        "readBy": { "type": "array", "description": "Array of participant UIDs who marked this message as read" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp when message was created" }
+      },
+      "required": ["messageId", "conversationId", "senderId", "text", "createdAt"]
+    },
+    "BlockedUser": {
+      "title": "BlockedUser",
+      "description": "User block record",
+      "type": "object",
+      "properties": {
+        "blockedUid": { "type": "string", "description": "UID of the blocked user" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Block timestamp" }
+      },
+      "required": ["blockedUid", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User profile documents"
+    },
+    "/usernames/{username}": {
+      "schema": { "$ref": "#/entities/Username" },
+      "description": "Username reservation collection ensuring global uniqueness"
+    },
+    "/conversations/{conversationId}": {
+      "schema": { "$ref": "#/entities/Conversation" },
+      "description": "Private direct conversation metadata between two participants"
+    },
+    "/conversations/{conversationId}/messages/{messageId}": {
+      "schema": { "$ref": "#/entities/Message" },
+      "description": "Messages subcollection inside a conversation"
+    },
+    "/users/{userId}/blocked/{blockedUid}": {
+      "schema": { "$ref": "#/entities/BlockedUser" },
+      "description": "Blocked user entries for each user"
+    }
+  }
+}

@@ -1,0 +1,64 @@
+<resources>
+    <string name="app_name">تواصل</string>
+    <string name="app_tagline">تواصل مع من تحب أينما كانوا</string>
+    <string name="sign_in_with_google">المتابعة باستخدام Google</string>
+    <string name="sign_out">تسجيل الخروج</string>
+    <string name="signing_in">جارٍ تسجيل الدخول...</string>
+
+    <!-- Navigation -->
+    <string name="nav_chats">المحادثات</string>
+    <string name="nav_search">البحث</string>
+    <string name="nav_profile">الملف الشخصي</string>
+    <string name="nav_settings">الإعدادات</string>
+
+    <!-- Profile setup -->
+    <string name="profile_setup_title">إعداد الملف الشخصي</string>
+    <string name="profile_setup_subtitle">اختر اسم المستخدم واسمك الظاهر لبدء المراسلة</string>
+    <string name="display_name_label">الاسم الظاهر</string>
+    <string name="display_name_hint">مثال: أحمد الوادعي</string>
+    <string name="username_label">اسم المستخدم (Username)</string>
+    <string name="username_hint">مثال: ahmad2026</string>
+    <string name="username_helper">يجب أن يتكون من 3-20 حرفاً (أحرف إنجليزية صغيرة، أرقام، أو شرطة سفلية)</string>
+    <string name="bio_label">الحالة / النبذة</string>
+    <string name="bio_hint">متاح للتواصل</string>
+    <string name="btn_complete_profile">إتمام التسجيل والدخول</string>
+    <string name="error_username_taken">اسم المستخدم محجوز بالفعل، اختر اسماً آخر</string>
+    <string name="error_username_invalid">اسم المستخدم غير صالح (استخدم 3-20 حرفاً إنجليزياً صغيراً وأرقاماً)</string>
+    <string name="error_display_name_empty">الرجاء إدخال الاسم الظاهر</string>
+
+    <!-- Search -->
+    <string name="search_hint">ابحث عن الأشخاص باستخدام اسم المستخدم...</string>
+    <string name="search_empty_title">ابحث عن أصدقائك</string>
+    <string name="search_empty_desc">اكتب اسم المستخدم للبحث عنه وبدء محادثة فورية مباشرة</string>
+    <string name="search_no_results">لم يتم العثور على مستخدم بهذا الاسم</string>
+    <string name="btn_start_chat">مراسلة</string>
+
+    <!-- Chats list -->
+    <string name="chats_title">محادثات تواصل</string>
+    <string name="empty_chats_title">لا توجد محادثات حتى الآن</string>
+    <string name="empty_chats_desc">اضغط على زر البحث أو زر بدء محادثة جديدة للبحث عن أصدقائك عبر اسم المستخدم</string>
+    <string name="new_chat">محادثة جديدة</string>
+
+    <!-- Chat Screen -->
+    <string name="type_message_hint">اكتب رسالة...</string>
+    <string name="send">إرسال</string>
+    <string name="status_online">متصل</string>
+    <string name="status_offline">غير متصل</string>
+    <string name="msg_status_sending">جارٍ الإرسال...</string>
+    <string name="msg_status_sent">تم الإرسال</string>
+    <string name="msg_status_delivered">تم التسليم</string>
+    <string name="msg_status_read">تمت القراءة</string>
+
+    <!-- Actions -->
+    <string name="action_save">حفظ</string>
+    <string name="action_cancel">إلغاء</string>
+    <string name="action_edit">تعديل</string>
+    <string name="action_delete">حذف</string>
+    <string name="action_block">حظر المستخدم</string>
+    <string name="action_unblock">إلغاء الحظر</string>
+    <string name="action_report">إبلاغ عن حساب</string>
+    <string name="report_dialog_title">إبلاغ عن حساب مسيء</string>
+    <string name="report_reason_hint">سبب الإبلاغ (إساءة، انتحال شخصية، إزعاج)...</string>
+    <string name="report_sent_success">تم إرسال البلاغ بنجاح وسيتم مراجعته</string>
+    <string name="blocked_success">تم حظر المستخدم بنجاح</string>
+</resources>
